@@ -150,6 +150,7 @@ class AudioRecorderController: UIViewController {
          audioRecorder = try! AVAudioRecorder(url: recordingURL, format: format) // FIXME: Deal with errors fatalError()
         
         audioRecorder?.record()
+        audioRecorder?.delegate = self
      }
  }
     
@@ -215,3 +216,20 @@ extension AudioRecorderController: AVAudioPlayerDelegate {
     
 }
 
+extension AudioRecorderController:AVAudioRecorderDelegate {
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        if flag == true {
+            //update player to load the new file
+            
+            if let recordingURL = recordingURL {
+                audioPlayer = try? AVAudioPlayer(contentsOf: recordingURL)
+            }
+        }
+    }
+    
+    func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+        if let error = error {
+            print("AudioRecorder error: \(error)")
+        }
+    }
+}
