@@ -12,6 +12,8 @@ import AVFoundation
 class AudioRecorderController: UIViewController {
     
     var audioPlayer: AVAudioPlayer?
+    var audioRecorder: AVAudioRecorder?
+    var recordingURL:URL?
     var timer: Timer?
     
     @IBOutlet weak var playButton: UIButton!
@@ -135,7 +137,51 @@ class AudioRecorderController: UIViewController {
     
     // MARK: - Recording
     
+    var isRecording: Bool {
+        audioRecorder?.isRecording ?? false
+    }
     
+ func startRecording() {
+     recordingURL = makeNewRecordingURL()
+     if let recordingURL = recordingURL {
+         print("URL: \(recordingURL)")
+         // 44.1 KHz = FM quality audio
+         let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)! // FIXME: can fail
+         audioRecorder = try! AVAudioRecorder(url: recordingURL, format: format) // FIXME: Deal with errors fatalError()
+        
+        audioRecorder?.record()
+     }
+ }
+    
+    func requestRecordPermission() {
+        AVAudioSession.sharedInstance().requestRecordPermission { granted in
+            DispatchQueue.main.async {
+                guard granted == true else {
+                    fatalError("We need microphone access")
+                }
+                self.startRecording()
+            }
+        }
+    }
+    
+    func stopRecording() {
+        audioRecorder?.stop()
+    }
+    
+ func toggleRecording() {
+     if isRecording {
+        stopRecording()
+     } else {
+        requestRecordPermission()
+     }
+ }
+    
+ func makeNewRecordingURL() -> URL {
+     let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+     let name = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withInternetDateTime])
+     let url = documents.appendingPathComponent(name).appendingPathExtension("caf")
+     return url
+ }
     
     // MARK: - Actions
     
@@ -149,7 +195,7 @@ class AudioRecorderController: UIViewController {
     }
     
     @IBAction func toggleRecording(_ sender: Any) {
-        
+        toggleRecording()
     }
 }
 
