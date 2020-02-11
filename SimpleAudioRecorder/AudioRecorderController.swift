@@ -7,8 +7,11 @@
 //
 
 import UIKit
+import AVFoundation
 
 class AudioRecorderController: UIViewController {
+    
+    var audioPlayer: AVAudioPlayer?
     
     @IBOutlet weak var playButton: UIButton!
     @IBOutlet weak var recordButton: UIButton!
@@ -33,6 +36,7 @@ class AudioRecorderController: UIViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+    
         
         // Use a font that won't jump around as values change
         timeElapsedLabel.font = UIFont.monospacedDigitSystemFont(ofSize: timeElapsedLabel.font.pointSize,
@@ -40,11 +44,22 @@ class AudioRecorderController: UIViewController {
         timeRemainingLabel.font = UIFont.monospacedDigitSystemFont(ofSize: timeRemainingLabel.font.pointSize,
                                                                    weight: .regular)
         
+        loadAudio()
+        
         
 	}
     
     
     // MARK: - Playback
+    func loadAudio() {
+        // app bundle is a readonly folder.
+        let songURL = Bundle.main.url(forResource: "piano", withExtension: "mp3")! //programmer error if this fails to load
+        
+        audioPlayer = try? AVAudioPlayer(contentsOf:songURL) // FIXME: use better error handling
+        
+        
+        
+    }
     
     
     
@@ -55,6 +70,7 @@ class AudioRecorderController: UIViewController {
     // MARK: - Actions
     
     @IBAction func togglePlayback(_ sender: Any) {
+        audioPlayer?.play()
         
 	}
     
