@@ -76,6 +76,7 @@ class AudioRecorderController: UIViewController {
         
         
         audioPlayer = try? AVAudioPlayer(contentsOf: soungURL) //FIXME: use better error handling
+        audioPlayer?.isMeteringEnabled = true
         audioPlayer?.delegate = self
     }
     
@@ -84,7 +85,13 @@ class AudioRecorderController: UIViewController {
     // call evrey 30 ms (10-30)
       stopTimer()
     timer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true, block: { [weak self] (timer) in
-          self?.updateViews()
+        
+        guard let self = self, let audioPlayer = self.audioPlayer else {return}
+          self.updateViews()
+        
+        self.audioPlayer?.updateMeters()
+        self.audioVisualizer.addValue(decibelValue: audioPlayer.averagePower(forChannel: 0))
+        
       })
   }
     
