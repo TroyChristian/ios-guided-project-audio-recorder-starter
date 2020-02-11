@@ -20,45 +20,74 @@ class AudioRecorderController: UIViewController {
     @IBOutlet weak var timeSlider: UISlider!
     @IBOutlet weak var audioVisualizer: AudioVisualizer!
 	
-	private lazy var timeIntervalFormatter: DateComponentsFormatter = {
+    private lazy var timeIntervalFormatter: DateComponentsFormatter = {
         // NOTE: DateComponentFormatter is good for minutes/hours/seconds
         // DateComponentsFormatter is not good for milliseconds, use DateFormatter instead)
         
-		let formatting = DateComponentsFormatter()
-		formatting.unitsStyle = .positional // 00:00  mm:ss
-		formatting.zeroFormattingBehavior = .pad
-		formatting.allowedUnits = [.minute, .second]
-		return formatting
-	}()
+        let formatting = DateComponentsFormatter()
+        formatting.unitsStyle = .positional // 00:00  mm:ss
+        formatting.zeroFormattingBehavior = .pad
+        formatting.allowedUnits = [.minute, .second]
+        return formatting
+    }()
     
     
     // MARK: - View Controller Lifecycle
-	
-	override func viewDidLoad() {
-		super.viewDidLoad()
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
         
         // Use a font that won't jump around as values change
         timeElapsedLabel.font = UIFont.monospacedDigitSystemFont(ofSize: timeElapsedLabel.font.pointSize,
                                                           weight: .regular)
         timeRemainingLabel.font = UIFont.monospacedDigitSystemFont(ofSize: timeRemainingLabel.font.pointSize,
                                                                    weight: .regular)
+         loadAudio()
         
-        loadAudio()
-        
-        
-	}
+    }
+    
+    private func updateViews() {
+        playButton.isSelected = isPlaying
+    }
     
     
     // MARK: - Playback
+    
     func loadAudio() {
-        // app bundle is a readonly folder.
-        let songURL = Bundle.main.url(forResource: "piano", withExtension: "mp3")! //programmer error if this fails to load
-        
-        audioPlayer = try? AVAudioPlayer(contentsOf:songURL) // FIXME: use better error handling
+        // app bundle is readonly folder
+     let soungURL = Bundle.main.url(forResource: "piano", withExtension: "mp3")!//programmer error if this fails to load
         
         
-        
+        audioPlayer = try? AVAudioPlayer(contentsOf: soungURL) //FIXME: use better error handling
+        audioPlayer?.delegate = self
+    }
+    
+    //what do i want to do?
+     //pause it
+     // valume
+     // restart the audio
+     // update the time/labels
+    
+    var isPlaying: Bool {
+        audioPlayer?.isPlaying ?? false
+    }
+    
+    func play() {
+        audioPlayer?.play()
+        updateViews()
+    }
+    
+    func pause() {
+        audioPlayer?.pause()
+        updateViews()
+    }
+    
+    func playPause() {
+        if isPlaying {
+             pause()
+        } else {
+            play()
+        }
     }
     
     
@@ -70,7 +99,7 @@ class AudioRecorderController: UIViewController {
     // MARK: - Actions
     
     @IBAction func togglePlayback(_ sender: Any) {
-        audioPlayer?.play()
+        playPause()
         
 	}
     
@@ -83,3 +112,16 @@ class AudioRecorderController: UIViewController {
     }
 }
 
+extension AudioRecorderController: AVAudioPlayerDelegate {
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        updateViews() 
+    }
+    
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        if let error = error {
+            print("Audio Player Error: \(error)")
+        }
+    }
+    
+}
