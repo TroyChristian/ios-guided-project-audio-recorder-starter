@@ -56,6 +56,7 @@ class AudioRecorderController: UIViewController {
     
     private func updateViews() {
         playButton.isSelected = isPlaying
+        recordButton.isSelected = isRecording
         
         //update time (currentTime)
         let elapsedTime = audioPlayer?.currentTime ?? 0
@@ -151,6 +152,7 @@ class AudioRecorderController: UIViewController {
         
         audioRecorder?.record()
         audioRecorder?.delegate = self
+        updateViews()
      }
  }
     
@@ -167,6 +169,7 @@ class AudioRecorderController: UIViewController {
     
     func stopRecording() {
         audioRecorder?.stop()
+        updateViews() 
     }
     
  func toggleRecording() {
