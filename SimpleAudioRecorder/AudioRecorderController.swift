@@ -12,6 +12,7 @@ import AVFoundation
 class AudioRecorderController: UIViewController {
     
     var audioPlayer: AVAudioPlayer?
+    var timer: Timer?
     
     @IBOutlet weak var playButton: UIButton!
     @IBOutlet weak var recordButton: UIButton!
@@ -43,11 +44,27 @@ class AudioRecorderController: UIViewController {
         timeRemainingLabel.font = UIFont.monospacedDigitSystemFont(ofSize: timeRemainingLabel.font.pointSize,
                                                                    weight: .regular)
          loadAudio()
+        updateViews()
         
+    }
+    
+    deinit {
+        stopTimer()
     }
     
     private func updateViews() {
         playButton.isSelected = isPlaying
+        
+        //update time (currentTime)
+        let elapsedTime = audioPlayer?.currentTime ?? 0
+        timeElapsedLabel.text = timeIntervalFormatter.string(from: elapsedTime)
+        
+        timeSlider.value = Float(elapsedTime)
+        timeSlider.minimumValue = 0
+        timeSlider.maximumValue = Float(audioPlayer?.duration ?? 0)
+        
+        let timeRemaining = (audioPlayer?.duration ?? 0) - elapsedTime
+        timeRemainingLabel.text = timeIntervalFormatter.string(from: timeRemaining)
     }
     
     
@@ -62,6 +79,20 @@ class AudioRecorderController: UIViewController {
         audioPlayer?.delegate = self
     }
     
+  func startTimer() {
+      // timers are automatically registered on run loop, so we need to cancel before adding a new one
+    // call evrey 30 ms (10-30)
+      stopTimer()
+    timer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true, block: { [weak self] (timer) in
+          self?.updateViews()
+      })
+  }
+    
+    func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
     //what do i want to do?
      //pause it
      // valume
@@ -74,12 +105,15 @@ class AudioRecorderController: UIViewController {
     
     func play() {
         audioPlayer?.play()
+        startTimer()
         updateViews()
     }
     
     func pause() {
         audioPlayer?.pause()
+        stopTimer()
         updateViews()
+         
     }
     
     func playPause() {
@@ -112,10 +146,12 @@ class AudioRecorderController: UIViewController {
     }
 }
 
+
 extension AudioRecorderController: AVAudioPlayerDelegate {
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        updateViews() 
+        updateViews()
+        stopTimer()
     }
     
     func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
@@ -125,3 +161,4 @@ extension AudioRecorderController: AVAudioPlayerDelegate {
     }
     
 }
+
